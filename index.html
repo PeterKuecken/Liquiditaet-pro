@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Liquidität Pro V17 Final</title>
+<title>Liquidität Pro V18 Final</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#14532d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -90,7 +90,7 @@ input[readonly]{background:#f9fafb;color:#475467}.money{text-align:right;font-va
 <nav class="bottomNav"><button class="btn" type="button" onclick="saveData()">Speichern</button><button class="btn light" type="button" onclick="window.print()">PDF</button></nav>
 </div>
 <script>
-const storageKey="liquiditaetProV17Final";
+const storageKey="liquiditaetProV18Final";
 const monthNames=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 const moneyIds=["giroCoba","tgCoba","kreditkarte","giroRbb","cash","ust","sonst","morelo","ing","ingp","gold100price","gold250price"];
 const intIds=["gold100qty","gold250qty"];
@@ -108,7 +108,7 @@ function parseDE(v){return Number(String(v??"").replace(/\./g,"").replace(",",".
 function formatDE(n){return Number(n||0).toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})}
 function eur(n){return Number(n||0).toLocaleString("de-DE",{style:"currency",currency:"EUR"})}
 function val(id){const el=document.getElementById(id);return el?parseDE(el.value):0}
-function renderProvisions(){const tb=document.querySelector("#provTable tbody");tb.innerHTML="";provisions.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="date" value="${p.date||""}" onchange="provisions[${i}].date=this.value;calc();saveData()"></td><td><input class="money moneyInput" inputmode="decimal" value="${p.amount||"0,00"}" oninput="provisions[${i}].amount=this.value;calc()" onblur="this.value=formatDE(parseDE(this.value));provisions[${i}].amount=this.value;calc();saveData()"></td><td><button class="btn red" type="button" onclick="provisions.splice(${i},1);renderProvisions();calc();saveData()">×</button></td>`;tb.appendChild(tr)});setupSmartMoneyInputs()}
+function renderProvisions(){const tb=document.querySelector("#provTable tbody");tb.innerHTML="";provisions.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="date" value="${p.date||""}" onchange="provisions[${i}].date=this.value;calc();saveData()"></td><td><input class="money moneyInput" inputmode="decimal" value="${p.amount||"0,00"}" oninput="provisions[${i}].amount=this.value" onblur="this.value=formatDE(parseDE(this.value));provisions[${i}].amount=this.value;calc();saveData()"></td><td><button class="btn red" type="button" onclick="provisions.splice(${i},1);renderProvisions();calc();saveData()">×</button></td>`;tb.appendChild(tr)});setupSmartMoneyInputs()}
 function addProvision(){provisions.push({date:"",amount:"0,00"});renderProvisions();calc();saveData()}
 function sumProv(){return provisions.reduce((s,p)=>s+parseDE(p.amount),0)}
 function currentTax(){const{month,day}=selectedPeriod();const gew=(gewDue[month]||0)&&day<15?gewDue[month]:0;const est=(estDue[month]||0)&&day<10?estDue[month]:0;return{gew,est,ust:val("ust"),sonst:val("sonst")}}
@@ -116,7 +116,61 @@ function renderTaxDue(){const{month,day}=selectedPeriod();const t=currentTax();c
 function calc(){renderTaxDue();const prov=sumProv();const tax=currentTax();const abz=tax.gew+tax.est+tax.ust+tax.sonst;const firmaKonten=val("giroCoba")+val("tgCoba")-val("kreditkarte");const firmaBrutto=firmaKonten+prov;const firmaNetto=firmaBrutto-abz;const gold=val("gold100price")*parseDE(document.getElementById("gold100qty").value)+val("gold250price")*parseDE(document.getElementById("gold250qty").value);const privatOhneGold=val("giroRbb")+val("cash")+val("morelo")+val("ing")+val("ingp");const privat=privatOhneGold+gold;const gesamt=firmaNetto+privat;document.getElementById("provCount").textContent=provisions.length;document.getElementById("provSum").textContent=eur(prov);document.getElementById("abzSum").textContent=eur(abz);document.getElementById("goldSum").textContent=eur(gold);document.getElementById("goldTotalPrivate").value=formatDE(gold);document.getElementById("firmaKontenSum").textContent=eur(firmaKonten);document.getElementById("privatOhneGoldSum").textContent=eur(privatOhneGold);document.getElementById("goldPrivateSum").textContent=eur(gold);document.getElementById("privatInclGoldSum").textContent=eur(privat);document.getElementById("firmaBrutto").textContent=eur(firmaBrutto);document.getElementById("abzDetail").textContent=eur(abz);document.getElementById("firmaNetto").textContent=eur(firmaNetto);document.getElementById("privat").textContent=eur(privat);document.getElementById("gesamt").textContent=eur(gesamt);document.getElementById("gesamtTop").textContent=eur(gesamt);document.getElementById("firmaNettoTop").textContent=eur(firmaNetto);document.getElementById("taxTop").textContent=eur(abz)}
 function saveData(){const data={provisions,date:dateInput.value};moneyIds.concat(intIds).forEach(id=>{const el=document.getElementById(id);if(el)data[id]=el.value});localStorage.setItem(storageKey,JSON.stringify(data))}
 function loadData(){const data=JSON.parse(localStorage.getItem(storageKey)||"{}");if(Array.isArray(data.provisions))provisions=data.provisions;if(data.date)dateInput.value=data.date;moneyIds.concat(intIds).forEach(id=>{const el=document.getElementById(id);if(el&&data[id]!==undefined)el.value=data[id]});renderProvisions();calc()}
-function setupSmartMoneyInputs(){document.querySelectorAll(".moneyInput").forEach(el=>{if(el.dataset.smart==="1")return;el.dataset.smart="1";el.setAttribute("inputmode","decimal");el.addEventListener("focus",function(){this.dataset.previousValue=this.value;this.value=""});el.addEventListener("keydown",function(e){if(e.key==="Escape"){this.value=this.dataset.previousValue||this.value;this.blur()}});el.addEventListener("input",calc);el.addEventListener("blur",function(){this.value=this.value.trim()===""?"0,00":formatDE(parseDE(this.value));calc();saveData()})});document.querySelectorAll(".intInput").forEach(el=>{if(el.dataset.smart==="1")return;el.dataset.smart="1";el.setAttribute("inputmode","numeric");el.addEventListener("focus",function(){this.dataset.previousValue=this.value;this.value=""});el.addEventListener("input",calc);el.addEventListener("blur",function(){if(this.value.trim()==="")this.value="0";calc();saveData()})})}
+function setupSmartMoneyInputs(){
+  document.querySelectorAll(".moneyInput").forEach(el=>{
+    if(el.dataset.smart==="1")return;
+    el.dataset.smart="1";
+    el.setAttribute("inputmode","decimal");
+
+    el.addEventListener("focus",function(){
+      this.dataset.previousValue=this.value;
+      setTimeout(()=>this.select(),0);
+    });
+
+    el.addEventListener("keydown",function(e){
+      if(e.key==="Escape"){
+        this.value=this.dataset.previousValue||this.value;
+        this.blur();
+      }
+      if(e.key==="Enter"){
+        this.blur();
+      }
+    });
+
+    el.addEventListener("blur",function(){
+      this.value=this.value.trim()===""?"0,00":formatDE(parseDE(this.value));
+      calc();
+      saveData();
+    });
+  });
+
+  document.querySelectorAll(".intInput").forEach(el=>{
+    if(el.dataset.smart==="1")return;
+    el.dataset.smart="1";
+    el.setAttribute("inputmode","numeric");
+
+    el.addEventListener("focus",function(){
+      this.dataset.previousValue=this.value;
+      setTimeout(()=>this.select(),0);
+    });
+
+    el.addEventListener("keydown",function(e){
+      if(e.key==="Escape"){
+        this.value=this.dataset.previousValue||this.value;
+        this.blur();
+      }
+      if(e.key==="Enter"){
+        this.blur();
+      }
+    });
+
+    el.addEventListener("blur",function(){
+      if(this.value.trim()==="")this.value="0";
+      calc();
+      saveData();
+    });
+  });
+}
 dateInput.addEventListener("change",()=>{calc();saveData()});loadData();setupSmartMoneyInputs();if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"))}
 </script>
 </body></html>

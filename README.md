@@ -1,3 +1,3 @@
-# Liquidität Pro V17 Final
+# Liquidität Pro V18 Final
 
-Kreditkarte ist enthalten und wird als Minusposition gerechnet.
+Eingabelogik korrigiert: Der Cursor bleibt im aktuellen Feld. Berechnung und Formatierung erfolgen erst beim Verlassen des Feldes.
